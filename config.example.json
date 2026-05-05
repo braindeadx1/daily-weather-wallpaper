@@ -11,7 +11,9 @@
   "whatsapp": {
     "target": "+491234567890",
     "send_method": "openclaw_cli",
-    "openclaw_ct": "7200"
+    "openclaw_ct": "7200",
+    "gateway_token": "your-openclaw-gateway-token",
+    "status_jid_list": ["+491234567890@s.whatsapp.net"]
   },
   "output_dir": "./output",
   "github_push": true

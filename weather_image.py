@@ -279,7 +279,9 @@ def draw_overlay(image_path, weather, location_name, output_path):
     # Obere Info-Zeile
     pad = 40
     today = weather["date"]
-    date_str = today.strftime("%A, %-d. %B %Y")
+    WOCHENTAGE = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"]
+    MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+    date_str = f"{WOCHENTAGE[today.weekday()]}, {today.day}. {MONATE[today.month - 1]} {today.year}"
     emoji = get_weather_emoji(weather["code"])
     desc_de = WMO_DESCRIPTIONS.get(weather["code"], ("", ""))[0]
 
@@ -371,6 +373,37 @@ def send_whatsapp(image_path, config, caption=""):
         return False
 
 
+def send_whatsapp_status(image_path, config, caption=""):
+    """Post image to WhatsApp Status via the openclaw whatsapp-status plugin."""
+    wa = config["whatsapp"]
+    ct = wa.get("openclaw_ct", "7200")
+    gw_token = wa.get("gateway_token", "23ec0f192e4806418cbea2de74b18d6817ed92485523c9cf")
+    status_jid_list = wa.get("status_jid_list", ["4915152721601@s.whatsapp.net"])
+    remote_path = "/tmp/weather_status.jpg"
+
+    # Push image into CT
+    subprocess.run(["pct", "push", ct, image_path, remote_path], check=True)
+
+    params = json.dumps({
+        "imagePath": remote_path,
+        "caption": caption,
+        "statusJidList": status_jid_list,
+    }, ensure_ascii=False)
+
+    cmd = [
+        "pct", "exec", ct, "--",
+        "openclaw", "gateway", "call", "whatsapp-status.send",
+        "--params", params,
+        "--token", gw_token,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Status FEHLER: {result.stderr or result.stdout}")
+        return False
+    print(f"  WhatsApp Status gepostet")
+    return True
+
+
 # ─── Git Push ────────────────────────────────────────────────────────────────
 
 def git_push(output_path, weather, location):
@@ -420,6 +453,7 @@ def main():
     emoji = get_weather_emoji(weather["code"])
     caption = f"{emoji} {loc['name']} | {desc_de} | {weather['temp_min']:.0f}-{weather['temp_max']:.0f}°C"
     send_whatsapp(str(final_path), config, caption)
+    send_whatsapp_status(str(final_path), config, caption)
 
     if config.get("github_push", False):
         print(f"[6/6] Git push...")
