@@ -1,0 +1,18 @@
+{
+  "location": {
+    "name": "Dortmund",
+    "latitude": 51.5136,
+    "longitude": 7.4653,
+    "timezone": "Europe/Berlin"
+  },
+  "comfyui": {
+    "host": "192.168.1.100:8188"
+  },
+  "whatsapp": {
+    "target": "+491234567890",
+    "send_method": "openclaw_cli",
+    "openclaw_ct": "7200"
+  },
+  "output_dir": "./output",
+  "github_push": true
+}
